@@ -1,0 +1,135 @@
+<html>
+  <head>
+    <script src="..\scripts\socket.io.js"></script>
+    <script src="..\scripts\jquery.js"></script>
+    <script src="..\scripts\jquery.keyboard.js"></script>
+    <script src="..\scripts\gameSettings.js"></script>
+    <script src="..\scripts\scripts.js"></script>
+    <script src="..\scripts\confetti.js"></script>
+
+    <link rel="stylesheet" href="..\styles\keyboard.css">
+    <link rel="stylesheet" href="..\styles\keyboard-dark.css">
+    <link rel="stylesheet" href="..\styles\css.css">
+  </head>
+
+  <body id="game">
+    <div id="app-wrapper">
+
+        <section class="gameName">
+            <div class="logo">
+              <img src="..\images\logo_color.png">
+            </div>
+            <div class="gameInfo animIn">
+              <h1>Security Connect</h1>
+              <p class="subheader gameDesc animIn">Uncover cybersecurity trends by<br>linking four terms that share a<br>common category or relationship.</p>
+              <p class="subheader gameOverDesc hide">That's a wrap!</p>
+            </div>
+        </section>
+        
+        <section class="gameWrapper animIn">
+            <section class="gameStats">
+                <div class="gameTime">
+                  <h2 class="label">Time to complete</h2>
+                  <h2 class="time"></h2>
+                </div>
+                <div class="gameMistakes animIn">
+                  <h3 class="label">Mistakes Remaining</h3>
+                  <div class="mistakes"></div>
+                </div>
+                <div class="gameScore hide">
+                  <h2 class="label">Grade</h2>
+                  <div class="grade"></div>
+                </div>
+            </section>
+            
+            <section class="gameBlock-Wrapper">        
+              <div class="gameBlock-Grid"></div>
+            </section>
+
+            <div class="gameTitleMessage"></div>
+      </section>
+
+      <section class="gameOver hide">
+          <div class="gradeHeader">
+            <div class="icon">
+              <img src="">
+            </div>
+            <div class="grade"></div>
+          </div>
+          <div class="gradeMessage">
+            <div class="icon">
+              <img src="">
+            </div>
+            <div class="gradeText"></div>
+          </div>
+          <div class="categoryGraphic">
+            <img src="../images/__gameover_graphic.png">
+          </div>
+          <div class="categoryBlockWrapper"></div>
+      </section>
+
+
+      <section class="leaderboardWrapper hide">
+
+        <h1>Leaderboard</h1>
+        <div class="leaderboard hide"></div>
+
+        <div class="leaderboardInput animIn">
+           <div class="leaderboardInput-Inner">
+              <div class="leaderboardInput-Instructions">
+                <p>Add your initials and share your time to the leaderboard.</p>
+              </div>
+              <input type="text" id="leaderboardInitials" maxlength="3">
+           </div>
+           
+           <div class="buttonRow">
+              <button type="button" id="leaderboardSubmit" onclick="addToLeaderboard()">Add Score to Leaderboard</button>
+              <button type="button" id="leaderboardSkip" onclick="skipToLeaderboard()">Skip</button>
+           </div>
+           
+        </div>
+
+      </section>
+
+
+
+
+
+
+        <section class="gameControls">
+          <div id="newGame" class="buttonWrapper">
+            <button type="button"  onclick="sendCommand('requestNewGame','')">Tap to Play</button>
+          </div>
+
+          <div id="checkSelection" class="buttonWrapper">
+            <button type="button"  onclick="checkSelection()">Check Selected</button>
+          </div>
+
+          <div id="gameOver" class="buttonWrapper">
+            <button type="button"  onclick="showGameOver()">Next</button>
+          </div>
+
+          <div id="shareToLeaderboard" class="buttonWrapper">
+            <button type="button"  onclick="showLeaderboard()">Share to Leaderboard</button>
+          </div>
+
+          <div id="startOver" class="buttonWrapper">
+            <button type="button"  onclick="resetGame()">Start Over</button>
+          </div>
+        </section>
+
+
+
+
+ 
+
+      </div>
+  </body>
+
+  <script>
+    initSockets() 
+    initGame()
+ </script>
+
+
+</html>

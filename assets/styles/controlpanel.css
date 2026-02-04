@@ -1,0 +1,142 @@
+/*-------------Control Panel--------------------*/
+:root {
+    --cp-display-scale: 0.6;
+    --cp-block-scale: 0.5;
+
+    --cp-display-size: calc(100vw * var(--cp-display-scale));
+    --cp-display-aspect: calc(9/16);
+}
+
+button.resetQuestion {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    display:none;
+    font-size: 24px;
+    border: 0px;
+    padding: .4em .8em;
+    font-family: var(--reg);
+    border-radius: 10px;
+}
+.questionBlock-Wrapper[data-state="off"] button.resetQuestion {
+    display:block;
+}
+
+body{
+    display: flex;
+    background-color: var(--darkgrey-bg);
+    padding: 2vw;
+}
+
+.boardWrapper {
+    max-width: 30vw;
+}
+
+section.questionWrapper {
+    border: 1px solid white;   
+    max-height: calc(var(--cp-display-size) * var(--cp-display-aspect));    
+}
+
+.questionCard,
+.idleScreen  {
+    padding: calc(var(--question-padding) * var(--cp-display-scale));
+    font-size: calc(var(--question-font-size) * var(--cp-display-scale));
+}
+
+.questionCategory, .questionCard .header {
+    font-size: calc(var(--question-header-size) * var(--cp-display-scale));
+}
+
+.hintText {
+    font-size: calc(var(--question-hint-size) * var(--cp-display-scale));
+}
+
+.questionCard {
+    border-width: calc(2vw * var(--cp-display-scale));
+}
+
+
+
+.answerInner, .questionInner, .questionCategory {
+    gap: calc(var(--question-padding) * var(--cp-display-scale));
+    padding: calc(var(--question-padding) * var(--cp-display-scale));
+}
+
+.controlWrapper {
+    margin-left: 5vw;
+    width: 100%;
+    max-width: var(--cp-display-size);
+}
+.buttonGroup {
+    display: flex;
+    gap: 15px;
+}
+.buttonGroup.reset {
+    justify-content: space-between;
+    flex: 0 0 100%;
+}
+
+section.controlButtons {
+    display: flex;
+    gap: 30px;
+    margin-top: 30px;
+    flex-wrap: wrap;
+}
+section.controlButtons button {
+    font-size: clamp(16px, 2vw, 3vh);
+    border: 0px;
+    padding: .4em .8em;
+    font-family: var(--reg);
+    border-radius: 10px;
+    z-index: 10;
+}
+
+.questionBlock {
+    border-width: 8px;
+}
+
+.questionBlock .questionText,
+.questionBlock .questionNumber {
+    font-size: calc(var(--block-font-size) * var(--cp-block-scale));
+}
+
+.questionBlock .questionNumber {
+    font-family: var(--reg);
+    font-size: calc(var(--block-number-size) * var(--cp-block-scale));
+}
+
+.hintPrompt {
+    font-size: calc(var(--question-hint-size)* var(--cp-display-scale));
+}
+
+
+
+body[data-game-state="ready"] button#showQuestion,
+body[data-game-state="ready"] button#promptHint,
+body[data-game-state="ready"] button#showHint,
+body[data-game-state="ready"] button#showAnswer-Correct,
+body[data-game-state="ready"] button#showAnswer-Wrong,
+body[data-game-state="ready"] button#endQuestion,
+
+body[data-game-state="categorylive"] button#showHint,
+body[data-game-state="categorylive"] button#promptHint,
+body[data-game-state="categorylive"] button#showAnswer-Correct,
+body[data-game-state="categorylive"] button#showAnswer-Wrong,
+
+body[data-game-state="questionlive"] button#showQuestion,
+
+body[data-game-state="hintlive"] button#showQuestion,
+body[data-game-state="hintlive"] button#showHint,
+body[data-game-state="hintlive"] button#promptHint,
+
+body[data-game-state*="answerlive"] button#showQuestion,
+body[data-game-state*="answerlive"] button#showHint,
+body[data-game-state*="answerlive"] button#promptHint,
+body[data-game-state*="answerlive"] button#showAnswer-Wrong,
+
+body.showHintPrompt button#promptHint,
+body.showHintPrompt button#showHint
+{
+  pointer-events: none;
+  opacity: .5;
+}

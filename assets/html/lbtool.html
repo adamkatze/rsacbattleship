@@ -1,0 +1,35 @@
+<html>
+  <head>
+    <script src="..\scripts\socket.io.js"></script>
+    <script src="..\scripts\jquery.js"></script>
+    <script src="..\scripts\jquery.keyboard.js"></script>
+    <script src="..\scripts\gameSettings.js"></script>
+    <script src="..\scripts\scripts.js"></script>
+    <script src="..\scripts\confetti.js"></script>
+
+    <link rel="stylesheet" href="..\styles\keyboard.css">
+    <link rel="stylesheet" href="..\styles\keyboard-dark.css">
+    <link rel="stylesheet" href="..\styles\css.css">
+  </head>
+
+  <body id="lbTool">
+
+    <section class="lbTool-Wrapper">
+
+        <div class="controls">
+            <button class="" onclick="getDatabase('drawLBTool', '/leaderboard') ">Show Leaderboard</button>
+            <button class="" onclick="getDatabase('drawLBTool', '/analytics') ">Show Analytics</button>
+        </div>
+
+        <div class="lbOutput"></div>
+    </section>
+
+    <script>
+        initSockets()
+        initLBTool()
+
+        var tables = []
+    </script>
+
+  </body>
+</html>
