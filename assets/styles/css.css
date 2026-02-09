@@ -664,6 +664,15 @@ div#app-wrapper {
     padding: var(--game-padding);
 }
 
+div#app-wrapper.portrait {
+    width: 1080px;
+    height: 1920px;
+}
+
+div#app-wrapper.landscape {
+    width: 1920px;
+    height: 1080px;
+}
 
 
 
@@ -1109,3 +1118,89 @@ body[data-final-level="true"] .aiActiveBar .bar {
     display: inline;
 }
 
+
+
+/*------------------Display Wall------------------------------------*/
+
+body#display section.gameName h1 {
+    color: var(--blue);
+}
+
+.displayGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: 1fr;
+    grid-gap: 60px;
+}
+
+body#display section.gameName {
+    grid-column: span 2;
+    margin-bottom: 60px;
+}
+
+body#display .gameInfo {
+    grid-column: 1;
+    opacity: 1 !important;
+    padding: 0;
+    margin: 0;
+}
+
+body#display section.gameInfo p {
+    margin: 30px 0;
+}
+
+.scoreDisplay {
+    background-color: var(--red);
+    border-radius: 15px;
+    padding: 20px;
+    max-width: 440px;
+    margin: 0 auto;
+}
+
+.scoreDisplay * {
+    color: white;
+}
+
+.scoreDisplay h4 {
+    font-size: 30px;
+    margin: 0;
+    text-align: center;
+    font-weight: 500;
+}
+
+.totalScore {
+    font-size: 60px;
+    margin: 0;
+    text-align: center;
+}
+
+section.radarDisplay .graphic {
+    width: 500px;
+    height: 500px;
+    background-color: #222;
+    border-radius: 50%;
+    margin: 0 auto 30px auto;
+}
+body#display .lbCol {
+    flex: 0 0 33.3%;
+}
+body#display .lbRow_Time {
+    display: none;
+}
+
+body#display .leaderboard {
+    margin-top: 0px;
+}
+
+.leaderBoardHeader {
+    color: white;
+    font-size: 60px;
+    text-align: center;
+    font-weight: 500;
+    margin-bottom: 60px;
+}
+
+section.leaderboardDisplay {
+grid-column: 3;
+    grid-row: 1 / span 2;
+}

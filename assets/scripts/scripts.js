@@ -38,6 +38,16 @@ function initGame() {
 
 
 
+function initDisplay() {
+    //Prevent right clicks
+  $(document).on("contextmenu", function(e) {
+    e.preventDefault();
+  });
+
+    scaleDisplay()
+}
+
+
 
 function newGame() {
   
@@ -464,6 +474,14 @@ function drawLeaderboard(data) {
 
   console.log(dataSorted)
 
+  //Calculate the total points
+  let totalPoints = 0
+  for (let i = 0; i < dataSorted.length; i++) {
+    totalPoints += parseInt(dataSorted[i].score)
+  }
+  console.log('total points: ' + totalPoints)
+  $('.totalScore').text(totalPoints)
+
   $(`<div class="lbRow header">
     <div class="lbRow_Rank lbCol">Rank</div>
     <div class="lbRow_Name lbCol">Name</div>
@@ -703,8 +721,18 @@ function getUrlParameter(name) {
   return param !== null ? param : false;
 }
 
+function scaleDisplay() {
+  scaleToFit('app-wrapper','display', false)
+
+  window.addEventListener('resize', scaleDisplay);
+  window.addEventListener('load', scaleDisplay);
+}
+
 function scaleElements() {
   scaleToFit('app-wrapper','game', true)
+
+  window.addEventListener('resize', scaleElements);
+  window.addEventListener('load', scaleElements);
 }
 
 function scaleToFit(targetID, parentID, portrait) {
@@ -728,11 +756,14 @@ function scaleToFit(targetID, parentID, portrait) {
   wrapper.style.left = `${offsetX}px`;
   wrapper.style.top = `${offsetY}px`;
 
-    window.addEventListener('resize', scaleElements);
-    window.addEventListener('load', scaleElements);
+
 }
 
+function updateDisplay() {
 
+    console.log('updating display')
+    getDatabase('drawLeaderboard', '/leaderboard')
+}
 
 
 /*----------------------------------------------------------------------------------------- */
@@ -774,6 +805,19 @@ function initSockets() {
           "action":"reload",
         }
         socket.emit('message', message);     
+}
+
+function initDisplaySockets() {
+
+        //Handle socket messages
+        socket.on('message', (data) => {     
+              console.log('Received message:', data);    
+              
+              if ( data.action == "updateDisplay") {
+                console.log('updating display')
+                updateDisplay()
+              }          
+        })  
 }
 
 

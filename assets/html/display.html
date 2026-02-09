@@ -1,0 +1,62 @@
+<html>
+  <head>
+    <script src="..\scripts\socket.io.js"></script>
+    <script src="..\scripts\jquery.js"></script>
+    <script src="..\scripts\jquery.keyboard.js"></script>
+    <script src="..\scripts\gameSettings.js"></script>
+    <script src="..\scripts\scripts.js"></script>
+    <script src="..\scripts\confetti.js"></script>
+
+    <link rel="stylesheet" href="..\styles\keyboard.css">
+    <link rel="stylesheet" href="..\styles\keyboard-dark.css">
+    <link rel="stylesheet" href="..\styles\css.css">
+  </head>
+
+  <body id="display">
+    <div id="app-wrapper" class="landscape">
+        
+        <div class="displayGrid">
+            <section class="gameName">
+                <h1>Agentic SOC: Strike Protocol</h1>
+            </section>
+        
+            <section class="gameInfo">
+                <p>
+                    <b class="blue">The Mission:</b>
+                    Partner with a Gemini- powered AI Agent to neutralize threats.
+                </p>
+                <p>
+                    <b class="blue">Scoring:</b>
+                    Identify threats to earn your Efficiency Grade. Rank on the global 
+                    leaderboard based on your accuracy and win premium Google Security 
+                    swag.
+                </p>
+            </section>
+
+            <section class="radarDisplay">
+                <div class="graphic"></div>
+
+                <div class="scoreDisplay">
+                    <h4>Today's Community Score</h4>
+                    <div class="totalScore">0</div>
+                    <h4>Threats Neutralized</h4>
+                </div>
+            </section>
+
+            <section class="leaderboardDisplay">
+                <div class="leaderBoardHeader">Leaderboard</div>
+                <div class="leaderboard"></div>
+            </section>
+        </div>            
+
+    </div>
+
+  </body>
+
+ <script>
+    initDisplaySockets()
+    initDisplay()
+
+    getDatabase('drawLeaderboard', '/leaderboard')
+ </script>
+</html>

@@ -118,9 +118,11 @@ io.on('connection', socket => {
         
         if (data.action == "addToLeaderboard") {     
           writeToDatabase('leaderboard', data.data.fields, data.data.values)
+          updateDisplay()
         }   
         if (data.action == "addToTable") {     
           writeToDatabase(data.data.table, data.data.fields, data.data.values)
+          updateDisplay()
         } 
     });
 
@@ -137,6 +139,10 @@ io.on('connection', socket => {
 
 function newGame(id) {   
   sendCommand('newGame',id)
+}
+
+function updateDisplay() {   
+  sendCommand('updateDisplay')
 }
 
 
