@@ -443,6 +443,7 @@ function showLeaderboard() {
   
   let curActive = $('.gameTab.animIn')
   animateSwap(curActive, '.leaderboardWrapper', animSpeed, 0) 
+  //animIn('.leaderboard', 0)
 
   updateGameState('leaderboard')
 }
@@ -566,13 +567,15 @@ function resetGame() {
   //Hide the game over modal
   animOut('.gameOver-Modal', 0)
 
-  //Make the intials input visibile again
+  //Make the intials input visbile again
   animateSwap('.leaderboard', '.leaderboardInput', 0, animSpeed) 
 
   //Show the game board again
   let curActive = $('.gameTab.animIn')
   animateSwap(curActive, '.homeWrapper', animSpeed, 0) 
 
+  $('input#leaderboardInitials').val('')
+  $('.leaderboardInput').removeClass('disabled')
   
 }
 
