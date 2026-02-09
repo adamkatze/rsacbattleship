@@ -71,7 +71,7 @@ const overlayPrecisionPerLevel = [3,3,3,3,3,3,3,2,2,2,2,2,1,1,1]
 
 const maxFeedLines = 3
 
-const showAdjacentCount = false  //If true, shows the adjacent blocks to the correct block when a correct block is clicked
+var showAdjacentCount = false  //If true, shows the adjacent blocks to the correct block when a correct block is clicked
 const aiScanModalTimer = 1000  //Time in ms that the ai scan modal is shown for when ai is active at the start of a level
 
 

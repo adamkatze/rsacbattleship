@@ -754,7 +754,7 @@ body[data-show-adjacent="false"] .gameBlock.clicked:not(.correct) .dot:before {
     background-repeat: no-repeat;
     background-position: center;
 }
-body[data-show-adjacent="false"] .gameBlock.clicked.correct .dot:before {
+.gameBlock.clicked.correct .dot:before {
     content:'';
     background-image: url('../images/icon_shield_black.png');
     background-size: contain;

@@ -8,6 +8,7 @@ function initGame() {
   });
 
   debug = getUrlParameter('debug')
+  showAdjacentCount = getUrlParameter('showAdjacent')
 
   $('body').attr('data-debug',debug)
   $('body').attr('data-show-timer', showTimer)
