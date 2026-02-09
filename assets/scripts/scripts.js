@@ -13,34 +13,8 @@ function initGame() {
   $('body').attr('data-show-timer', showTimer)
   updateGameState('loading')
 
-  //Create the empty grid
-
-  for(let i = 0; i < (blocksPerCategory * categoriesPerGame); i ++) {
-
-    let xpos = (i % blocksPerCategory)
-    let ypos = (Math.floor(i / blocksPerCategory))
-
-    let w = (100 / blocksPerCategory)
-    let h = (100 / categoriesPerGame)
-
-    let left = xpos * w
-    let top =  ypos * h
-
-
-
-    $(`<div class="gridBlockWrapper idle" data-category="" data-id="${i}" data-pos="${xpos},${ypos}" 
-        style="left: ${left}%; top: ${top}%; width: ${w}%; height: ${h}%;">
-         <div class="gridBlock" onclick="toggleBlock(this)">
-           <span class="title"></span>
-         </div>
-      </div>`).appendTo('.gameBlock-Grid')
-
-  }
-
-  //Init the mistakes display
-  for (let i = 0; i < triesMax; i++) {
-     $(`<div class="tryMarker" data-id="${i}"></div>`).appendTo('.mistakes')
-  }
+  $('body').attr('data-show-adjacent',showAdjacentCount)
+  
 
   //Init the on screen keyboard
   $('#leaderboardInitials').keyboard({
@@ -64,7 +38,7 @@ function initGame() {
 
 
 
-function newGame(data) {
+function newGame() {
   
   updateGameState('loading')
 
@@ -72,35 +46,257 @@ function newGame(data) {
   updateTimer(gameTime)
   $('.gameTime .label').text('Time left')
 
-  console.log(data)
-
-  //Update the game title string
-  currentGameTitle = data.title
-  $('.gameTitleMessage').html(`Looks like you're an expert in <br> <strong>${data.title}</strong>`)
-
-  //Generate a random order for positioning the blocks on the grid
-  let order = randomOrder(blocksPerCategory * categoriesPerGame)
-
-  let count = 0
-  let catCount = 0
-  Object.entries(data.categories).forEach(([key, cur]) => {      
-     for (let i = 0; i < cur.length; i++) {       
-         $(`.gridBlockWrapper[data-id="${order[count]}"]`).attr('data-category',key).attr('data-category-id',catCount)
-         $(`.gridBlockWrapper[data-id="${order[count]}"] span.title`).text(cur[i])
-         count = count + 1
-     }  
-     catCount = catCount + 1  
-  });
-
-  $('.gridBlockWrapper').removeClass('idle')
-
-  //Reset the mistakes display
+  //Reset game variables
+  currentLevel = 1
+  aiActive = false
+  playerScore = 0
   triesRemaining = triesMax 
+
+  addFeedLine('New game started')
+
+  //Load the game tab
+  animateSwap('.homeWrapper', '.gameWrapper', 0, animSpeed) 
+
+  //Init the game
+  initGameLevel()
 
   //Start the timer
   gameOverFlag = false
   startGameTick()
   updateGameState('playing')
+}
+
+
+
+
+
+function initGameLevel() {
+  $('.gameBlock-Grid').html('')
+  triesRemaining = triesMax
+  updateTries()
+  updateAIActiveBar() 
+
+  //Create the empty grid
+  let blockWidth = $('.gameBlock-Grid').width() / gridWidth
+
+  for (let i = 0; i < gridHeight; i++) {
+    for (let j = 0; j < gridWidth; j++) {
+      let block = $(`<div class="gameBlock" 
+              style="width:${blockWidth}px;height:${blockWidth}px; top:${i * blockWidth}px; left:${j * blockWidth}px;" 
+              data-row="${i}" 
+              data-col="${j}" 
+              data-count="${(i * gridWidth) + j}" 
+              data-id="${j},${i}"
+              onclick="handleBlockClick(this)">
+          <div class="dot"></div>
+        </div>`)
+      $('.gameBlock-Grid').append(block)
+    }
+  }
+
+  //Make random gameBlocks correct based on currentLevel and correctPerLevel
+  //Chose random numbers between 0 and (gridHeight * gridWidth) - 1
+  let correctCount = correctPerLevel[currentLevel - 1]
+
+  threatsRemaining = correctCount
+  updateThreats()
+
+  let correctBlocks = []   
+  while (correctBlocks.length < correctCount) {
+    let randNum = Math.floor(Math.random() * (gridHeight * gridWidth))  
+    if ( correctBlocks.indexOf(randNum) === -1 ) {  
+      correctBlocks.push(randNum)
+      $(`.gameBlock[data-count="${randNum}"]`).addClass('correct')
+    }     
+  }
+
+  //Determine the number of adjacent correct blocks for every non-correct block and save that number in the data-count attribute
+  if (showAdjacentCount) {
+    $('.gameBlock').not('.correct').each(function() {
+      let row = parseInt($(this).attr('data-row'))
+      let col = parseInt($(this).attr('data-col'))
+      let count = 0 
+      for (let i = -1; i <= 1; i++) {
+        for (let j = -1; j <= 1; j++) {
+          if (row + i >= 0 && row + i < gridHeight && col + j >= 0 && col + j < gridWidth) {
+            if ($(`.gameBlock[data-row="${row + i}"][data-col="${col + j}"]`).hasClass('correct')) {
+              count++
+            } 
+          }
+        }
+      } 
+      $(this).attr('data-count', count)
+      $(this).find('.dot').html(`<span class="count">${count}</span>`)
+    })
+  }
+
+
+  //If ai is active, show the ai scanner graphic
+  if (aiActive) {
+    console.log('ai active this level') 
+
+    animIn('.aiScan-Modal', animSpeed)
+    setTimeout(function() {
+      animOut('.aiScan-Modal', animSpeed)
+      for (let i = 0; i < overlaysPerLevel[currentLevel - 1]; i++) {
+        createAIOverlay()
+      }
+    }, aiScanModalTimer + animSpeed)
+  }
+
+  //If were on the last level, show the final message
+  if (currentLevel == maxLevels) {
+    addFeedLine('Final Threats Detected. Eliminate all remaining threats to win.')
+    $('body').attr('data-final-level', true)
+  }
+
+}
+
+function createAIOverlay(overlaySize) {
+  //If no overlaySize defined, use the overlayPrecisionPerLevel grid blocks
+  let size = overlaySize
+  if (size === undefined) {
+    size = overlayPrecisionPerLevel[currentLevel - 1]
+  }
+
+  console.log('overlay size: ' + size)
+
+  //Choose a two correct blocks that dont already have an ai overlay to base the overlay around
+  let correctBlocks = $('.gameBlock.correct:not(.aiOverlayed)')
+
+  //Return if there are no correct blocks available
+  if (correctBlocks.length == 0) {
+    console.log('no correct blocks available for overlay')
+    return
+  }
+
+  let baseBlockIndex = Math.floor(Math.random() * correctBlocks.length)
+  let baseBlock = $(correctBlocks[baseBlockIndex])    
+  let baseRow = parseInt(baseBlock.attr('data-row'))
+  let baseCol = parseInt(baseBlock.attr('data-col'))  
+
+
+
+  //Calculate the overlay position
+  let overlayTop = (baseRow - Math.floor(size / 2)) * ( $('.gameBlock-Grid').width() / gridWidth )
+  let overlayLeft = (baseCol - Math.floor(size / 2)) * ( $('.gameBlock-Grid').width() / gridWidth ) 
+  if (overlayTop < 0) { overlayTop = 0 }
+  if (overlayLeft < 0) { overlayLeft = 0 }
+  if (overlayTop + (size * ($('.gameBlock-Grid').width() / gridWidth)) > $('.gameBlock-Grid').height() ) {
+    overlayTop = $('.gameBlock-Grid').height() - (size * ($('.gameBlock-Grid').width() / gridWidth))
+  }
+  if (overlayLeft + (size * ($('.gameBlock-Grid').width() / gridWidth)) > $('.gameBlock-Grid').width() ) {
+    overlayLeft = $('.gameBlock-Grid').width() - (size * ($('.gameBlock-Grid').width() / gridWidth))
+  }
+
+  //If the overlay would cover an existing overlay, try again with a smaller size
+  let overlap = false 
+  $('.aiOverlay').each(function() {
+    let oTop = parseInt($(this).css('top'))
+    let oLeft = parseInt($(this).css('left'))
+    let oSize = parseInt($(this).attr('data-size'))
+    if ( !( overlayLeft + (size * ($('.gameBlock-Grid').width() / gridWidth)) <= oLeft ||
+            overlayLeft >= oLeft + (oSize * ($('.gameBlock-Grid').width() / gridWidth)) ||
+            overlayTop + (size * ($('.gameBlock-Grid').width() / gridWidth)) <= oTop || 
+            overlayTop >= oTop + (oSize * ($('.gameBlock-Grid').width() / gridWidth)) ) ) {
+      overlap = true
+    }
+  })
+
+  if (overlap) {
+    console.log('overlay overlap detected, trying again')
+    if (size > 1) {
+      size--
+      createAIOverlay(size)
+    }
+    return
+  }
+
+
+  //Create the overlay element
+  let overlay = $(`<div class="aiOverlay"
+                style="width:${size * ( $('.gameBlock-Grid').width() / gridWidth )}px; height:${size * ( $('.gameBlock-Grid').width() / gridWidth )}px; top:${overlayTop}px; left:${overlayLeft}px;" 
+                data-size="${size}">
+                <div class="aiOverlay-Inner">
+                  <div class="graphic">
+                    <img src="../images/icon_alert.png">
+                  </div>
+                  <div class="text">Investigate here</div>
+                </div>
+
+
+              </div>`)
+  $('.gameBlock-Grid').append(overlay)
+
+  //Add a class to any correct blocks within the overlay
+  $('.gameBlock.correct').each(function() {
+    let blockRow = parseInt($(this).attr('data-row'))
+    let blockCol = parseInt($(this).attr('data-col'))
+    if ( blockRow >= (overlayTop / ( $('.gameBlock-Grid').width() / gridWidth )) &&
+         blockRow < (overlayTop + (size * ($('.gameBlock-Grid').width() / gridWidth))) / ( $('.gameBlock-Grid').width() / gridWidth ) &&
+         blockCol >= (overlayLeft / ( $('.gameBlock-Grid').width() / gridWidth )) &&
+         blockCol < (overlayLeft + (size * ($('.gameBlock-Grid').width() / gridWidth))) / ( $('.gameBlock-Grid').width() / gridWidth ) ) {
+      $(this).addClass('aiOverlayed')
+    }
+  })
+
+}
+
+
+
+
+function nextLevel() {
+  $('body').attr('data-game-state','animating')
+  animOut('.gameBlock-Grid', 0)
+
+  setTimeout(function() { 
+    initGameLevel()
+    addFeedLine('New threats detected. Level ' + currentLevel)
+    animIn('.gameBlock-Grid', animSpeed)
+  }, animSpeed + 10)  
+
+  setTimeout(function() { 
+    $('body').attr('data-game-state','playing')
+  }, (animSpeed * 2) + 10)
+
+
+}
+
+function updateAIActiveBar() {
+  if (currentLevel <= aiLevelStart) { 
+    $(`.aiActiveBar .bar`).text(`${currentLevel} / ${aiLevelStart} Turns until AI Active`)
+  } else {
+    aiActive = true
+    $('.aiStatusBar').text('AI AGENT STATUS: Scanning for Threats')
+    $(`.aiActiveBar .bar`).text(`${currentLevel - aiLevelStart} / ${maxLevels - aiLevelStart} AI Active`)
+  }
+}
+
+
+
+function addFeedLine(text) {
+  let timeStamp = new Date();
+  //Convert timeStamp to HH:MM:SS format  
+  let timeString = timeStamp.toTimeString().split(' ')[0];
+  
+  let newLine = $(`<div class="feedLine">[${timeString}] ${text}</div>`)
+
+  let curLines = $('.feedLine').length
+  if ( curLines >= maxFeedLines ) {
+    $('.feedLine').first().remove()
+  }     
+  $('.aiFeed').append(newLine)
+}
+
+
+
+
+function updateTries() {
+  $('.triesRemaining .value').text(`${triesRemaining} / ${triesMax}`)
+}
+
+function updateThreats() {
+  $('.threatsRemaining .value').text(`${threatsRemaining} / ${correctPerLevel[currentLevel-1]}`)
 }
 
 
@@ -173,193 +369,8 @@ function endGameTick() {
 function updateGameState(state) {
   gameState = state
   $('body').attr('data-game-state',gameState)
-
-  if (gameState == 'idle') {
-     $('#newGame').addClass('active')
-  } else {
-     $('#newGame').removeClass('active')
-  }
 }
 
-
-
-
-
-function toggleBlock(el) {
-  updateIdle() 
-
-  if ( gameState == 'playing' ) {
-    let tar = $(el).closest('.gridBlockWrapper')
-    let selCount = $('.gridBlockWrapper.selected').length
-
-    //Toggle the blocks selection state, ignoring clicks if the max amount of blocks are already selected
-    if ( $(tar).hasClass('selected') ) {
-      $(tar).removeClass('selected')
-    } else {
-      if ( selCount < blocksPerCategory ) {
-        $(tar).addClass('selected')
-      }      
-    }
-
-    //Check the count again to see if we should show the check selections button
-    selCount = $('.gridBlockWrapper.selected').length
-    if ( selCount >= blocksPerCategory ) {
-      $('#checkSelection').addClass('active')
-    } else {
-      $('#checkSelection').removeClass('active')
-    }
-  }
-
-}
-
-
-
-//Checks if the current choices are correct
-function checkSelection() {
-  updateIdle() 
-  updateGameState('checking')
-  //if correct, animate blocks to top row and show category info
-  //if wrong, show wrong state and reduce tries by 1
-  //if tries equal zero, end game
-
-  let catToCheck = ''
-  let passedCheck = true
-
-  $('.gridBlockWrapper.selected').each(function() {
-    if ( catToCheck.length <= 0 ) {
-       catToCheck = $(this).attr('data-category')
-    } else {
-       let curCat = $(this).attr('data-category')
-       if (curCat != catToCheck) {
-        passedCheck = false
-       }
-    }
-  })
-
-  if (passedCheck) {
-    correctAnswer() 
-  } else {
-    wrongAnswer()
-  }
-
-}
-
-
-function correctAnswer() {
-  animatingBlocks = true
-
-  //If this is the last row, stop the timer
-  if ( (rowsComplete + 1) >= categoriesPerGame) {
-    endGameTick()
-  }
-  
-  $('#checkSelection').removeClass('active')
-
-  let category = ''
-  let values = ''
-  let id = ''
-
-  //Move correct blocks to the highest open row
-  let count = 0
-  $('.gridBlockWrapper.selected').each(function() {
-      let id_a = $(`.gridBlockWrapper[data-pos="${count},${rowsComplete}"]`).attr('data-id')
-      let id_b = $(this).attr('data-id')
-      swapBlock(id_a, id_b)
-
-      id = $(this).attr('data-category-id')
-      category = $(this).attr('data-category')
-
-      let value = $(this).find('span.title').text().trim()
-      values = values + value + ', '
-      count = count + 1
-  })
-  values = values.slice(0, -2);
-
-  //Create the category info block
-  let h = (100 / categoriesPerGame)
-  let top =  rowsComplete * h
-
-  $(`<div class="categoryInfoWrapper" data-category-id="${id}" style="height: ${h}%; top: ${top}%;">
-      <div class="categoryInfo">
-        <h3>${category}</h3>
-        <p>${values}</p>
-      </div>
-    </div>`).appendTo('.gameBlock-Grid, .categoryBlockWrapper')
-
-
-  //Mark these are completed so they cant be selected anymore
-   setTimeout(function() {
-    $('.gridBlockWrapper.selected').addClass('completed').removeClass('selected')
-   }, animSpeed )
-
-
-  //Show the category info block after animations are done
-  setTimeout(function() {
-     $('.categoryInfoWrapper').addClass('animIn')
-  }, animSpeed * 2)
-
-
-  //Increase the rows complete flag and allow the user to play again
-  setTimeout(function() {   
-    rowsComplete = rowsComplete + 1
-
-    if (!gameOverFlag) {      
-      if ( rowsComplete >= categoriesPerGame) {
-        gameOver()
-      } else {
-        updateGameState('playing')
-      }
-    } 
-    animatingBlocks = false
-    
-  }, animSpeed * 3)
-  
-
-}
-
-function shakeSelected() {
-  $('.gridBlockWrapper.selected').addClass('shake')
-
-  setTimeout(function() {
-    $('.gridBlockWrapper.shake').removeClass('shake')
-  }, animSpeed)
-
-}
-
-function wrongAnswer() {
-  if ( triesRemaining <= 0 ) {
-    endGameTick()
-  }
-  console.log('wrong')
-  animatingBlocks = true  
-
-  //Show wrong error here
-  shakeSelected()
-
-  //Reduce mistake markers
-  triesRemaining = triesRemaining - 1
-  updateTryMarkers()
-
-  setTimeout(function() {
-      if (!gameOverFlag) {
-        if ( triesRemaining <= 0 ) {
-          gameOver() 
-        } else {
-          updateGameState('playing')
-        }
-      }
-      animatingBlocks = false
-    }, animSpeed * 2)  
-}
-
-
-function updateTryMarkers() {
-  for (let i = 0; i < triesRemaining; i++) {
-    $(`.tryMarker[data-id="${i}"]`).addClass('keep')
-  }
-  $('.tryMarker:not(.keep)').addClass('hide')
-  $('.tryMarker').removeClass('keep')
-}
 
 
 function gameOver(idle) {
@@ -382,76 +393,14 @@ function gameOverScreen(idle) {
   console.log('game over')
 
   //Set analytics values
-  //Give a grade score based on mistakes 
-  playerCorrect = rowsComplete
   
-
-  if (!idle) {
-    if ( timer <= 0 ) { 
-      playerTimeLeft = 0 
-    } else {
-      playerTimeLeft = timer + 1
-    }   
-
-    if ( timer > 0 ) {
-      playerGrade = gradeInfo[triesRemaining].grade
-
-      $('.grade').text(playerGrade)
-      $('.gradeHeader .icon img').attr('src',gradeInfo[triesRemaining].icon)
-      $('.gradeMessage .icon img').attr('src',gradeInfo[triesRemaining].icon2)
-      $('.gradeMessage .gradeText').html(`${gradeInfo[triesRemaining].substring} <span class="blue">${currentGameTitle}</span> puzzle.`)
-    } else {
-      playerGrade = outOfTimeInfo.grade
-
-      $('.grade').text(outOfTimeInfo.string)
-      $('.gradeHeader .icon img').attr('src',outOfTimeInfo.icon)
-      $('.gradeMessage .icon img').attr('src',outOfTimeInfo.icon2)
-      $('.gradeMessage .gradeText').html(`${outOfTimeInfo.substring} <span class="blue">${currentGameTitle}</span> puzzle.`)
-    }
-  
-
-    $('.gameTime .label').text('Time completed')    
-
-    //Animate mistakes display out and grade in
-    animateSwap('.gameMistakes', '.gameScore', animSpeed, animSpeed)   
-  }
 
   //Show Thats a wrap display
-  animateSwap('.gameDesc', '.gameOverDesc', animSpeed, 0)  
-  
+  animateSwap('.gameDesc', '.gameOverDesc', animSpeed, 0)   
 
-  $('.gridBlockWrapper').removeClass('selected')
+  //Show the game over modal
+  animIn('.gameOver-Modal', animSpeed)
 
-  //Shake all unanswered questions
-  $('.gridBlockWrapper:not(.completed)').addClass('shake')
-
-
-  //Show the correct answers for any that arent set
-  //Get list of unanswered categories
-  $('.gridBlockWrapper:not(.completed)').each(function() {
-    let catid = $(this).attr('data-category-id')
-    addToUniqueArray(idsRemaining, catid)
-  })
-
-  //Animate the remaining unanswered categories
-  let endSpeed = (animSpeed * 4)
-  for (let i = 0; i < idsRemaining.length; i++) {
-    setTimeout(function() {
-      $(`.gridBlockWrapper[data-category-id="${idsRemaining[i]}"]`).addClass('selected')
-      correctAnswer(true)
-    }, (endSpeed * i) + (2 * animSpeed))
-  }
-
-
-  //Wait til animations are done to show the share button
-  setTimeout(function() {
-    if (!idle) {
-      $('#gameOver').addClass('active')
-    } else {
-      $('div#startOver').addClass('active')
-    }
-    
-  }, (endSpeed * idsRemaining.length) + (3 * animSpeed))
 
   //If the game was idle, reset the game automatically after idleResetTimer time
   if (idle) {
@@ -459,10 +408,26 @@ function gameOverScreen(idle) {
       if (gameState == 'gameover') {
         resetGame()
       }      
-    }, (endSpeed * idsRemaining.length) + (idleResetTimer * 1000))
+    }, idleResetTimer * 1000)
   }
 
 }
+
+
+function showGameOver() {
+
+   $('#gameOver').removeClass('active')
+
+   animOut('.gameInfo', animSpeed)
+   animateSwap('.gameWrapper', '.gameOver', animSpeed, 0) 
+
+   setTimeout(function() {
+    animOut('.gameOverDesc', animSpeed) 
+    $('#shareToLeaderboard').addClass('active')
+   }, animSpeed * 2)
+}
+
+
 
 
 function showLeaderboard() {
@@ -474,7 +439,8 @@ function showLeaderboard() {
     animIn('.gameInfo')
   },animSpeed)
   
-  animateSwap('.gameOver', '.leaderboardWrapper', animSpeed, 0) 
+  let curActive = $('.gameTab.animIn')
+  animateSwap(curActive, '.leaderboardWrapper', animSpeed, 0) 
 
   updateGameState('leaderboard')
 }
@@ -510,14 +476,7 @@ function drawLeaderboard(data) {
      let gt = parseInt(dataSorted[j].gametime)
      let pt = parseInt(dataSorted[j].time)
 
-     //Formats the grade and times for the leaderboard
-     if ( gt - pt > 0 && parseInt(dataSorted[j].triesremaining) > 0 ) {
-       curGrade = dataSorted[j].grade     
-       curTime = updateTimer(parseInt(dataSorted[j].time),true) 
-     } else {
-       curGrade = dataSorted[j].correct + '/' + categoriesPerGame
-       curTime = '---'
-     }
+     
 
 
     $(`<div class="lbRow">
@@ -588,18 +547,7 @@ function skipToLeaderboard() {
 
 
 
-function showGameOver() {
 
-   $('#gameOver').removeClass('active')
-
-   animOut('.gameInfo', animSpeed)
-   animateSwap('.gameWrapper', '.gameOver', animSpeed, 0) 
-
-   setTimeout(function() {
-    animOut('.gameOverDesc', animSpeed) 
-    $('#shareToLeaderboard').addClass('active')
-   }, animSpeed * 2)
-}
 
 
 
@@ -608,58 +556,76 @@ function resetGame() {
   updateGameState('loading')
   $('#startOver, .gameTitleMessage').removeClass('active')
 
-  if ( $(`.gameOverDesc`).hasClass('animIn') ) {
-    animateSwap('.gameOverDesc', '.gameDesc', animSpeed, 0 ) 
-  } else {
-    animIn('.gameDesc') 
-  }
   
 
-  //Remove all the category info blocks
-  $('.categoryInfoWrapper').remove()
 
   //Reset the timer label
   updateTimer(gameTime)
-  $('.gameTime .label').text('Time to complete')
+  $('.gameWrapper .gameTime .label').text('Time to complete')
+
+  //unset the final level styling
+  $('body').attr('data-final-level', false)
 
   //Reset the tries
   triesRemaining = triesMax 
-  rowsComplete = 0
-  $('.tryMarker').removeClass('hide')
 
-  //Reset all grid blocks to initial states
-  $('.gridBlockWrapper').removeClass('selected completed shake').addClass('idle').attr('data-category-id','').attr('data-category','')
-  $('.gridBlock .title').text('')
-
-  //Reset the unanswered categories list
-  idsRemaining = []
-
-  //Make the mistakes block visible again
-  animateSwap('.gameScore','.gameMistakes', 0, 0)   
+  //Hide the game over modal
+  animOut('.gameOver-Modal', 0)
 
   //Make the intials input visibile again
   animateSwap('.leaderboard', '.leaderboardInput', 0, animSpeed) 
 
   //Show the game board again
-  animateSwap('.leaderboardWrapper', '.gameWrapper', animSpeed, 0) 
+  let curActive = $('.gameTab.animIn')
+  animateSwap(curActive, '.homeWrapper', animSpeed, 0) 
 
-  //Show the Tap to Play button
-  setTimeout(function() {
-    $('#newGame').addClass('active')
-    $('.gameTitleMessage').removeClass('show')
-
-    $('input#leaderboardInitials').val('')
-    $('.leaderboardInput').removeClass('disabled')
-  }, animSpeed)
   
 }
 
 
 
 
+function handleBlockClick(el) {  
 
+  updateIdle()
 
+  if ($(el).hasClass('correct') && !$(el).hasClass('clicked')) {
+    addFeedLine('Threat Neutralized at [' + $(el).attr('data-id') + ']')
+    playerScore = playerScore + 1
+    updateScore()
+    threatsRemaining--
+    updateThreats()
 
+    if (threatsRemaining <= 0) {
+      if (currentLevel < maxLevels) {
+        currentLevel++
+        nextLevel()
+      } else {
+        gameOver()
+      }
+    }
+  } else if (!$(el).hasClass('clicked')) {
+    triesRemaining--
+    addFeedLine('Missed Threat at [' + $(el).attr('data-id') + ']. Tries remaining: ' + triesRemaining)
+    updateTries()
+
+    if (triesRemaining <= 0) {
+      if (currentLevel < maxLevels) {
+        currentLevel++
+        nextLevel()
+      } else {
+        gameOver()
+      }
+    }
+  }
+
+  $(el).addClass('clicked')
+
+}
+
+function updateScore() {
+  $('.gameStats .value').text(playerScore)
+}
 
 
 
@@ -667,7 +633,6 @@ function resetGame() {
 /*----------------------------------------------------------------------------------------- */
 /*------------------------------Helper Functions--------------------------------------------*/
 /*----------------------------------------------------------------------------------------- */
-
 //Animates the swap between two elements that are in the same position
 function animateSwap(el_a, el_b, speed, delay) {
 
@@ -699,44 +664,9 @@ function animIn(el) {
 
 
 
-function addToUniqueArray(array, value) {
-  if ($.inArray(value, array) === -1) {
-    array.push(value);
-  }
-}
-
-
-function swapBlock(id_a, id_b) {
-  if ( $(`.gridBlockWrapper[data-id="${id_a}"]`).length > 0 && $(`.gridBlockWrapper[data-id="${id_b}"]`).length > 0 ) { 
-
-      let posA =  $(`.gridBlockWrapper[data-id="${id_a}"]`).attr('data-pos')
-      let leftA = $(`.gridBlockWrapper[data-id="${id_a}"]`).prop('style').left;
-      let topA =  $(`.gridBlockWrapper[data-id="${id_a}"]`).prop('style').top;
-
-      let posB = $(`.gridBlockWrapper[data-id="${id_b}"]`).attr('data-pos')
-      let leftB = $(`.gridBlockWrapper[data-id="${id_b}"]`).prop('style').left;
-      let topB =  $(`.gridBlockWrapper[data-id="${id_b}"]`).prop('style').top;
-
-      $(`.gridBlockWrapper[data-id="${id_a}"]`).attr('data-pos',posB).css('left',leftB).css('top',topB)
-      $(`.gridBlockWrapper[data-id="${id_b}"]`).attr('data-pos',posA).css('left',leftA).css('top',topA)
-
-  } else {
-    console.log('block doesnt exist')
-  }  
-}
 
 
 
-function randomOrder(length) {  
-  const numbers = Array.from({ length }, (_, i) => i);
-
-  for (let i = numbers.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
-  }
-
-  return numbers;
-}
 
 
 function getDatabase(action, url) {
@@ -833,7 +763,7 @@ function initSockets() {
 
               if ( data.action == "newGame") {
                 console.log('initializing new game')
-                newGame(data.data)
+                newGame()
               }
             }
         })

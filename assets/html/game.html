@@ -20,36 +20,140 @@
               <img src="..\images\logo_color.png">
             </div>
             <div class="gameInfo animIn">
-              <h1>Security Connect</h1>
-              <p class="subheader gameDesc animIn">Uncover cybersecurity trends by<br>linking four terms that share a<br>common category or relationship.</p>
+              <h1>Agentic SOC:<br>Strike Protocol</h1>
+              <p class="subheader gameDesc animIn">Lorem ipsum dolor sit amet, consectetur adipiscing elit, ed do eiusmod tempor incididunt ut labore et dolore.</p>
               <p class="subheader gameOverDesc hide">That's a wrap!</p>
             </div>
         </section>
         
-        <section class="gameWrapper animIn">
-            <section class="gameStats">
+        <section class="homeWrapper animIn gameTab">
+            <section class="objectives">
+              <div class="graphic">
+                <img src="..\images\icon_shield_green.png">
+              </div>
+              <div class="content">
+                <h2>Misson Objective</h2>
+                <span>Neutralize all the threats</span>
+              </div>
+            </section>
+
+            <section class="howToPlay">
+              <h2>How to play</h2>
+              <p>
+                <b class="blue">The Mission:</b>
+                 Partner with a Gemini- powered AI Agent to neutralize threats.
+              </p>
+              <p>
+                <b class="blue">Scoring:</b>
+                 Identify threats to earn your Efficiency Grade. Rank on the global 
+                 leaderboard based on your accuracy and win premium Google Security 
+                 swag.
+              </p>
+
+              <div id="newGame" class="gameControls">
+                <button type="button" onclick="sendCommand('requestNewGame','')">Tap to Play</button>
+              </div>
+
+            </section>
+
+        </section>
+
+
+
+        <section class="gameWrapper gameTab">
+            <section class="objectives">
+              <div class="graphic">
+                <img src="..\images\icon_shield_green.png">
+              </div>
+
+              <div class="content">
+
+                <div class="gameStats">
+                  <h2 class="value">0</h2>
+                  <span>Threats Neutralized</span>
+                </div>
+
                 <div class="gameTime">
-                  <h2 class="label">Time to complete</h2>
+                  <h2 class="label">Time left:</h2>
                   <h2 class="time"></h2>
                 </div>
-                <div class="gameMistakes animIn">
-                  <h3 class="label">Mistakes Remaining</h3>
-                  <div class="mistakes"></div>
+
+              </div>  
+              
+              <div class="triesRemaining">
+                <h2 class="value">0 / 0</h2>
+                <h2 class="label"> Attempts Remaining</h2>                
+              </div>
+
+              <div class="threatsRemaining">
+                <h2 class="value">0 / 0</h2>
+                <h2 class="label"> Threats Remaining</h2>                
+              </div>
+            </section>     
+            
+            <section class="gameInfo-Wrapper">
+              <div class="feedWrapper">
+                <div class="aiIndicator">
+                  <span>AI AGENT</span>
+                  <div class="scannerGraphic white">
+                        <div class="scanner">
+                          <div class="ring ring01"></div>
+                          <div class="ring ring02"></div>
+                          <div class="ring ring03"></div>
+                          <div class="scannerLine"></div>
+                        </div>
+                  </div>
                 </div>
-                <div class="gameScore hide">
-                  <h2 class="label">Grade</h2>
-                  <div class="grade"></div>
+                <div class="aiFeed">
                 </div>
+              </div>
+              <div class="aiStatusBar">AI AGENT STATUS: Training</div>
+              <div class="aiActiveBar">
+                <div class="bar">
+                  1/2 Turns til active
+                </div>
+              </div>
             </section>
             
             <section class="gameBlock-Wrapper">        
               <div class="gameBlock-Grid"></div>
+
+
+              <div class="gameGrid-Modal aiScan-Modal hide">
+                  <div class="gameOver-Content">
+                      <div class="scannerGraphic blue">
+                        <div class="scanner">
+                          <div class="ring ring01"></div>
+                          <div class="ring ring02"></div>
+                          <div class="ring ring03"></div>
+                          <div class="scannerLine"></div>
+                        </div>
+                      </div>
+                      <p>Scanning for threats...</p>
+                      
+                  </div>
+              </div>
+
+
+              <div class="gameGrid-Modal gameOver-Modal hide">
+                  <div class="gameOver-Content">
+                      <h2>Mission Complete!</h2>
+                      <p>Review your results and share your score to the leaderboard.</p>
+                      <button type="button"  onclick="showLeaderboard()">View Results</button>
+                  </div>
+              </div>
+
+
+
             </section>
 
             <div class="gameTitleMessage"></div>
       </section>
 
-      <section class="gameOver hide">
+
+
+
+      <section class="gameOver hide gameTab">
           <div class="gradeHeader">
             <div class="icon">
               <img src="">
@@ -69,7 +173,7 @@
       </section>
 
 
-      <section class="leaderboardWrapper hide">
+      <section class="leaderboardWrapper hide gameTab">
 
         <h1>Leaderboard</h1>
         <div class="leaderboard hide"></div>
@@ -97,9 +201,7 @@
 
 
         <section class="gameControls">
-          <div id="newGame" class="buttonWrapper">
-            <button type="button"  onclick="sendCommand('requestNewGame','')">Tap to Play</button>
-          </div>
+          
 
           <div id="checkSelection" class="buttonWrapper">
             <button type="button"  onclick="checkSelection()">Check Selected</button>

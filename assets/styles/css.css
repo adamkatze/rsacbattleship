@@ -32,7 +32,7 @@
     --p3: calc(var(--h1) * 0.35);
 
     --game-padding: 60px;
-    --grid-aspect-ratio: 75%;
+    --grid-aspect-ratio: 100%;
 }
 
 body {
@@ -133,16 +133,28 @@ section.gameStats {
 
 section.gameBlock-Wrapper {
     margin: var(--game-padding) -1% 0 -1%;
-
+    display: flex;
+    justify-content: center;
+    position:relative;
 }
 
 .gameBlock-Grid {
+    width: 800px;
     position: relative;
+    opacity: 1;
+    transition: var(--anim-speed)
+}
+.gameBlock-Grid.hide {
+    opacity: 0;
 }
 .gameBlock-Grid:before {
     content: '';
     display: block;
     padding-bottom: var(--grid-aspect-ratio);
+}
+
+body[data-game-state="animating"] .gameBlock-Grid {
+    pointer-events: none;
 }
 
 
@@ -221,7 +233,10 @@ section.gameControls {
     opacity: 1;
     z-index: 5;
 }
-
+.gameControls {
+    display: flex;
+    justify-content: center;
+}
 .gameControls button {
     font-size: var(--h3);
     border: 0px !important;
@@ -232,6 +247,7 @@ section.gameControls {
     font-family: var(--med);
     transition: .3s;
 }
+
 
 
 
@@ -320,7 +336,8 @@ section.gameControls {
 .leaderboard,
 .leaderboardInput,
 .gameOver,
-.gameInfo {
+.gameInfo,
+.gameTab {
     opacity: 0;
     transition: var(--anim-speed);
     margin-top: var(--game-padding);
@@ -333,7 +350,8 @@ section.gameControls {
 .leaderboard.hide,
 .leaderboardInput.hide,
 .gameOver.hide,
-.gameInfo.hide {
+.gameInfo.hide,
+.gameTab.hide {
   display:none;
 }
 .gameWrapper.animIn,
@@ -341,7 +359,8 @@ section.gameControls {
 .leaderboard.animIn,
 .leaderboardInput.animIn,
 .gameOver.animIn,
-.gameInfo.animIn {
+.gameInfo.animIn,
+.gameTab.animIn {
     opacity: 1;
 }
 
@@ -617,10 +636,6 @@ p.subheader.gameOverDesc {
 
 
 
-body[data-show-timer="false"] .gameTime {
-    display: none;
-}
-
 body[data-show-timer="false"] .mistakes {
     flex-direction: row;
 }
@@ -685,3 +700,412 @@ body#lbTool {
   tr.lbTable-Row.lbTable-Header * {
     color: white;
 }
+
+
+
+
+
+
+.gameBlock {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+.gameBlock .dot {
+    width: 20px;
+    height: 20px;       
+    background-color: var(--darkgrey-text);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.gameBlock .dot .count {
+    color: black;
+    font-size: 36px;   
+    font-family: var(--bold); 
+    display:none;
+}
+.gameBlock.clicked .dot .count {
+    display:block;
+} 
+
+body[data-debug="true"] .gameBlock.correct {
+    border: 1px solid var(--green);
+}
+
+.gameBlock.clicked .dot {
+    background-color: var(--red);
+    border-radius: 10px;
+    width: 80%;
+    height: 80%;
+}
+body[data-show-adjacent="false"] .gameBlock.clicked:not(.correct) .dot:before {
+    content:'';
+    background-image: url('../images/icon_x_black.png');
+    background-size: contain;
+    width: 60%;
+    height: 60%;
+    display: block;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+body[data-show-adjacent="false"] .gameBlock.clicked.correct .dot:before {
+    content:'';
+    background-image: url('../images/icon_shield_black.png');
+    background-size: contain;
+    width: 80%;
+    height: 80%;
+    display: block;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.gameBlock.correct.clicked .dot {
+  background-color: var(--green);
+}
+section.objectives .graphic {
+    width: 80px;
+}
+section.objectives .graphic img {
+    width: 100%;
+}
+section.objectives {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px 30px;
+    align-items: center;
+}
+section.objectives .content h2 {
+    color: var(--green);
+    font-family: var(--bold);
+}
+section.objectives .content span {
+    color: white;
+}
+section.objectives .content * {
+    font-size: 40px;
+}
+
+section.gameWrapper section.objectives .content {
+    border:5px solid var(--green);
+    gap: 15px;
+    justify-content: space-between;
+    align-items: center;
+    display:flex;
+    padding: 20px;
+    border-radius: 15px;
+    flex: 1;
+}
+
+section.howToPlay {
+    padding: 60px;
+    border: 8px solid var(--blue);
+    border-radius: 30px;
+    margin-top: 90px;
+}
+
+.howToPlay h2 {
+    color: white;
+    font-size: 40px;
+}
+.howToPlay p {
+    color: white;
+    font-size: 36px;
+}
+
+.blue {
+    color: var(--blue)
+}
+
+
+.gameTime {
+    background-color: var(--green);
+    color: white !important;
+    padding: 20px 30px;
+    gap: 15px;
+    display:flex;
+    border-radius: 10px;
+}
+.gameTime * {
+    color: white !important;
+    font-size: 30px !important;
+}
+
+
+
+.gameStats {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+
+
+section.gameInfo-Wrapper {
+    border: 5px solid var(--blue);
+    border-radius: 15px;
+    margin-top: 30px;
+}
+
+.feedWrapper {
+    padding: 30px;
+    border-bottom: 5px solid var(--blue);
+    display: flex;
+    align-items: center;
+    gap: 30px;
+}
+.aiIndicator {
+    width: 200px;
+    background-color: var(--blue);
+    border-radius: 15px;
+    padding-bottom: 20px;
+}
+.aiIndicator span {
+    color: white;
+    text-align: center;
+    padding: 10px 0;
+    display: block;
+    font-size: 24px;
+}
+
+body[data-final-level="true"] .aiIndicator {
+    background-color: var(--yellow);
+}   
+
+.aiFeed {
+    color: white;
+    font-size: 24px;
+}
+
+.aiStatusBar {
+    padding: 15px 30px;
+    border-bottom: 5px solid var(--blue);
+    color: white;
+    font-size: 24px;
+}
+
+.aiActiveBar {
+    padding: 15px 30px;
+}
+.aiActiveBar .bar {
+    background-color: var(--blue);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 15px 30px;
+    border-radius: 15px;
+    font-size: 24px;
+    text-align: center;
+}
+body[data-final-level="true"] .aiActiveBar .bar {
+    background-color: var(--yellow);
+}
+
+
+
+.aiOverlay {
+    border: 5px solid var(--blue);
+    border-radius: 15px;    
+    position: absolute;
+    pointer-events: none;
+    opacity: 0;
+    transition: var(--anim-speed);
+    animation: 0.5s aiOverlayAnim forwards;
+}
+
+.aiOverlay-Inner {
+    width: 100%;
+    height: 100%;
+    animation: 0.5s aiOverlayInnerFade forwards;
+    animation-delay: 1s;
+}
+.aiOverlay-Inner .graphic {
+    width: 100%;
+    height: 60%;
+    display: flex;
+    justify-content: center;
+    padding-top: 10%;
+}
+.aiOverlay-Inner .graphic img {
+    height: 100%;
+    margin: 0 auto;
+}
+.aiOverlay-Inner .text {
+    color: white;
+    text-align: center;
+    font-size: 24px;
+    height: 30%;
+    padding-top: 10%;
+}
+.aiOverlay[data-size="2"] .aiOverlay-Inner .text {
+    font-size: 22px;
+    padding-top: 2%;
+}
+.aiOverlay[data-size="1"] .aiOverlay-Inner .text {
+    display:none;
+}
+.aiOverlay[data-size="1"] .aiOverlay-Inner .graphic {
+    height: 100%;
+    padding: 0;
+}
+@keyframes aiOverlayAnim {
+    0% { opacity: 0; }
+    100% { opacity: 1; } 
+}
+@keyframes aiOverlayInnerFade {
+    0% { opacity: 1; }
+    100% { opacity: 0; } 
+}
+
+.scannerGraphic {
+    display: flex;
+    justify-content: center;
+}
+.scannerGraphic .scanner {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    display: block;
+    border-radius: 50%;
+}
+.aiIndicator .scannerGraphic .scanner {
+    width: 80px;
+    height: 80px;
+}
+
+:root {
+    --ring01-size: 100%;
+    --ring02-size: 58%;
+    --ring03-size: 15%;
+}
+
+.scannerGraphic .scanner .ring {    
+    position: absolute;  
+    top:0;
+    left: 0;
+    display:flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+.scannerGraphic .scanner .ring:before {
+    content: '';
+    display: block;
+    border-radius: 50%;
+    outline: 7px solid white;
+}
+.scannerGraphic .scanner .ring01:before {
+    width: var(--ring01-size);
+    height: var(--ring01-size);
+}
+.scannerGraphic .scanner .ring02:before {
+    width: var(--ring02-size);
+    height: var(--ring02-size);
+}
+.scannerGraphic .scanner .ring03:before {
+    width: var(--ring03-size);
+    height: var(--ring03-size);
+    background-color: white;
+    outline: none;
+    border: 7px solid white;
+}
+.scannerGraphic.blue .scanner .ring:before {
+    outline-color: var(--blue);
+    border-color: var(--blue);
+}
+.scannerGraphic.blue .scanner .ring03:before,
+.scannerGraphic.blue .scannerLine {
+    background-color: var(--blue);
+}
+.scannerLine {
+    width: calc(50% + 10px);
+    height: 10px;
+    background-color: white;
+    transform-origin: left center;
+    top: calc(50% - 5px);
+    left: 50%;
+    position: absolute;
+    animation: scannerSpin 2s linear infinite;
+    border-radius: 50px;
+}
+@keyframes scannerSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+
+.aiScan-Modal p {
+    margin-bottom: 0px;
+}
+.gameGrid-Modal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+    display: flex;
+    transition: .3s;
+    opacity: 0; 
+    z-index: -1;
+    pointer-events: none;
+}
+.gameGrid-Modal.animIn {
+    opacity: 1;
+    z-index: 10;
+    pointer-events: all;
+}
+
+.gameOver-Content {
+    background-color: #000000cc;
+    border: 8px solid var(--blue);
+    border-radius: 15px;
+    padding: 45px;
+    color: white;
+    text-align: center;
+    max-width: 60%;
+ 
+}
+
+
+.gameOver-Content button {
+    font-size: var(--h3);
+    border: 0px !important;
+    padding: .8em 1.6em;
+    border-radius: 150px;
+    min-width: 50%;
+    cursor: pointer;
+    font-family: var(--med);
+    transition: .3s;
+}
+
+.triesRemaining,
+.threatsRemaining {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 1em;
+}
+.threatsRemaining {
+    margin-left: auto !important;
+}
+
+.triesRemaining *,
+.threatsRemaining *  {
+    font-size: 30px !important;
+    color: white !important;
+}
+
+.triesRemaining h2,
+.threatsRemaining h2 {
+    display: inline;
+}
+

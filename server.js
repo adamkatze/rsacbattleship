@@ -136,17 +136,7 @@ io.on('connection', socket => {
 
 
 function newGame(id) {   
-  //let newgame = getRandomGame()
-
-  let games = getGames()
-  sendCommand('newGame',id, games[gameIndex])
-
-  gameIndex = (gameIndex + 1) % games.length;
-  //if (gameIndex >= games.length - 1) {
-  //  gameIndex = 0
-  //} else {
-  //  gameIndex = gameIndex + 1
-  //}  
+  sendCommand('newGame',id)
 }
 
 
