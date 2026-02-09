@@ -470,7 +470,7 @@ function drawLeaderboard(data) {
   <div class="lbTable"></div>`).appendTo('.leaderboard')
 
   for (let j = 0; j < lbRowMax; j++) {
-     let curGrade = ''
+     let curGrade = dataSorted[j].score
      let curTime = dataSorted[j].time
      
      let gt = parseInt(dataSorted[j].gametime)
@@ -510,22 +510,14 @@ function addToLeaderboard() {
    if ( initials.length > 0) {
 
       //Generate the sort score
-      let score = playerCorrect
-      if (triesRemaining > 0 && playerTimeLeft > 0) {      
-        score = (playerCorrect + playerTimeLeft) * triesRemaining
-      }
-  
-      //Calculate time took
-      let playerTime = playerTimeLeft
-      if (timeTook) {
-        playerTime = gameTime - playerTimeLeft
-        if (playerTime < 0) { playerTime = 0 }
-      }
+      let score = playerScore
+       
+
 
       //Send leaderboard info to the server
       let playerData = {
-        "fields": "name, correct, grade, time, timestamp, score, triesremaining, gametime",
-        "values": [initials, playerCorrect, playerGrade, playerTime, timestamp, score, triesRemaining, gameTime]
+        "fields": "name, grade, timestamp, score, gametime",
+        "values": [initials, playerGrade, timestamp, score, gameTime]
       }
       sendCommand('addToLeaderboard',playerData)
 
