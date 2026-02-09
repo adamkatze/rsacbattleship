@@ -73,6 +73,7 @@ function newGame() {
 
 function initGameLevel() {
   $('.gameBlock-Grid').html('')
+  triesMax = correctPerLevel[currentLevel - 1]
   triesRemaining = triesMax
   updateTries()
   updateAIActiveBar() 
@@ -586,10 +587,14 @@ function handleBlockClick(el) {
     addFeedLine('Threat Neutralized at [' + $(el).attr('data-id') + ']')
     playerScore = playerScore + 1
     updateScore()
+
+    triesRemaining--
+    updateTries()
+
     threatsRemaining--
     updateThreats()
 
-    if (threatsRemaining <= 0) {
+    if (threatsRemaining <= 0 || triesRemaining <= 0) {
       if (currentLevel < maxLevels) {
         currentLevel++
         nextLevel()

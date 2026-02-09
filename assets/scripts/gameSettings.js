@@ -8,7 +8,7 @@ const gridHeight = 10
 const gridWidth = 10
 
 //Amount of tries the player gets before ending the level
-const triesMax = 4
+var triesMax = 4
 
 
 const levelCount = 5
