@@ -59,10 +59,10 @@ var lastInteraction
 
 
 
-var currentLevel = 15
+var currentLevel = 1
 var aiActive = false
 
-const maxLevels = 1
+const maxLevels = 15
 const aiLevelStart = 3
 
 const correctPerLevel = [3, 6, 9, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]
