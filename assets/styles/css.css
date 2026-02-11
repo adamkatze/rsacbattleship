@@ -1073,19 +1073,22 @@ body[data-final-level="true"] .aiActiveBar .bar {
     pointer-events: all;
 }
 
-.gameOver-Content {
+.gameGrid-Modal-Content {
     background-color: #000000cc;
     border: 8px solid var(--blue);
     border-radius: 15px;
     padding: 45px;
     color: white;
     text-align: center;
-    max-width: 60%;
- 
+    max-width: 60%; 
+}
+.gameGrid-Modal-Content p {
+    color: white;
+    font-size: 30px;
+    text-align: center;
 }
 
-
-.gameOver-Content button {
+.gameGrid-Modal-Content button {
     font-size: var(--h3);
     border: 0px !important;
     padding: .8em 1.6em;
@@ -1095,6 +1098,21 @@ body[data-final-level="true"] .aiActiveBar .bar {
     font-family: var(--med);
     transition: .3s;
 }
+
+.gridWipe-Modal .gameGrid-Modal-Content {
+    border: 8px solid var(--red);
+    max-width: unset !important;
+    width: 100% !important;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+.gridWipe-Modal .gameGrid-Modal-Content .graphic img {
+    max-width: 200px;
+}   
+
 
 .triesRemaining,
 .threatsRemaining {
@@ -1204,3 +1222,4 @@ section.leaderboardDisplay {
 grid-column: 3;
     grid-row: 1 / span 2;
 }
+

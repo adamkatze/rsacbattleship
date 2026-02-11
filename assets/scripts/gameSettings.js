@@ -7,8 +7,8 @@ const gridAspect = 9/16;  //Aspect ratio of the gameplay grid blocks
 const gridHeight = 10
 const gridWidth = 10
 
-//Amount of tries the player gets before ending the level
-var triesMax = 4
+//Amount of turns
+var maxTurns = 15
 
 
 const levelCount = 5
@@ -21,6 +21,8 @@ const gameTime = 1500  //game timer in seconds
 const idleTimer = 500    //Time in seconds without interactions that the game will reset
 const idleResetTimer = 5 //Time after an idle game over to auto reset the game
 
+const gridWipeAnimationTime = 2000 //Time in ms that the grid wipe animation takes
+const grideWipeDelay = 100 //Time between each block being wiped in ms
 
 //If true, saves the time the user took to finish the game
 //If false, saves the time remaining on the countdown clock at the end of the game
@@ -33,12 +35,9 @@ const timeTook = true
 
 var gameState = 'idle'
 var gameOverFlag = true
-var triesRemaining = triesMax 
+var currentTurn = 1 
 var threatsRemaining = 0
 
-var rowsComplete = 0
-
-var idsRemaining = []
 
 var gameTick
 var timer
@@ -67,7 +66,7 @@ const aiLevelStart = 3
 
 const correctPerLevel = [3, 6, 9, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]
 const overlaysPerLevel = [1, 1, 2, 2, 3, 3, 4, 4, 6, 7, 8, 9, 10, 11, 12]
-const overlayPrecisionPerLevel = [3,3,3,3,3,3,3,2,2,2,2,2,1,1,1]
+const overlayPrecisionPerLevel = [3,3,3,3,3,3,3,2,2,2,2,2,1,1,1,1,1,1]
 
 const maxFeedLines = 3
 

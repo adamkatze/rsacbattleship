@@ -58,10 +58,9 @@ function newGame() {
   $('.gameTime .label').text('Time left')
 
   //Reset game variables
-  currentLevel = 1
+  currentTurn = 1 
   aiActive = false
   playerScore = 0
-  triesRemaining = triesMax 
 
   addFeedLine('New game started')
 
@@ -83,9 +82,6 @@ function newGame() {
 
 function initGameLevel() {
   $('.gameBlock-Grid').html('')
-  triesMax = correctPerLevel[currentLevel - 1]
-  triesRemaining = triesMax
-  updateTries()
   updateAIActiveBar() 
 
   //Create the empty grid
@@ -106,12 +102,11 @@ function initGameLevel() {
     }
   }
 
-  //Make random gameBlocks correct based on currentLevel and correctPerLevel
+  //Make random gameBlocks correct based on triesMax
   //Chose random numbers between 0 and (gridHeight * gridWidth) - 1
-  let correctCount = correctPerLevel[currentLevel - 1]
+  let correctCount = maxTurns
 
   threatsRemaining = correctCount
-  updateThreats()
 
   let correctBlocks = []   
   while (correctBlocks.length < correctCount) {
@@ -143,38 +138,32 @@ function initGameLevel() {
   }
 
 
-  //If ai is active, show the ai scanner graphic
-  if (aiActive) {
-    console.log('ai active this level') 
 
-    animIn('.aiScan-Modal', animSpeed)
-    setTimeout(function() {
-      animOut('.aiScan-Modal', animSpeed)
-      for (let i = 0; i < overlaysPerLevel[currentLevel - 1]; i++) {
-        createAIOverlay()
-      }
-    }, aiScanModalTimer + animSpeed)
-  }
 
   //If were on the last level, show the final message
-  if (currentLevel == maxLevels) {
+  if (currentTurn == maxTurns) {
     addFeedLine('Final Threats Detected. Eliminate all remaining threats to win.')
     $('body').attr('data-final-level', true)
   }
 
 }
 
+
+
+
+
+
 function createAIOverlay(overlaySize) {
   //If no overlaySize defined, use the overlayPrecisionPerLevel grid blocks
   let size = overlaySize
   if (size === undefined) {
-    size = overlayPrecisionPerLevel[currentLevel - 1]
+    size = overlayPrecisionPerLevel[currentTurn - 1]
   }
 
   console.log('overlay size: ' + size)
 
   //Choose a two correct blocks that dont already have an ai overlay to base the overlay around
-  let correctBlocks = $('.gameBlock.correct:not(.aiOverlayed)')
+  let correctBlocks = $('.gameBlock.correct:not(.aiOverlayed):not(.clicked)')
 
   //Return if there are no correct blocks available
   if (correctBlocks.length == 0) {
@@ -257,33 +246,42 @@ function createAIOverlay(overlaySize) {
 
 
 
-function nextLevel() {
-  $('body').attr('data-game-state','animating')
-  animOut('.gameBlock-Grid', 0)
-
-  setTimeout(function() { 
-    initGameLevel()
-    addFeedLine('New threats detected. Level ' + currentLevel)
-    animIn('.gameBlock-Grid', animSpeed)
-  }, animSpeed + 10)  
-
-  setTimeout(function() { 
-    $('body').attr('data-game-state','playing')
-  }, (animSpeed * 2) + 10)
-
-
-}
 
 function updateAIActiveBar() {
-  if (currentLevel <= aiLevelStart) { 
-    $(`.aiActiveBar .bar`).text(`${currentLevel} / ${aiLevelStart} Turns until AI Active`)
+  if (currentTurn <= aiLevelStart) { 
+    $(`.aiActiveBar .bar`).text(`${currentTurn} / ${aiLevelStart} Turns until AI Active`)
   } else {
     aiActive = true
+    checkAIStatus()
     $('.aiStatusBar').text('AI AGENT STATUS: Scanning for Threats')
-    $(`.aiActiveBar .bar`).text(`${currentLevel - aiLevelStart} / ${maxLevels - aiLevelStart} AI Active`)
+    $(`.aiActiveBar .bar`).text(`${currentTurn - aiLevelStart} / ${maxTurns - aiLevelStart} AI Active`)
   }
 }
 
+
+function checkAIStatus() {
+  if (aiActive && !gameOverFlag) {
+
+    //If all the correct blocks that are overlayed have been clicked, remove the overlay and create a new one
+    let totalOverlayed   = $('.correct.aiOverlayed').length
+    let clickedOverlayed = $('.correct.aiOverlayed.clicked').length
+
+    if ( clickedOverlayed  >= totalOverlayed ) {
+      $('.aiOverlay').remove()
+    }
+
+
+
+    //If no overlays are currently on the board, create a new one
+    if ($('.aiOverlay').length == 0) {
+        animIn('.aiScan-Modal', animSpeed)
+        setTimeout(function() {
+          animOut('.aiScan-Modal', animSpeed)
+          createAIOverlay()
+        }, aiScanModalTimer + animSpeed)      
+    }
+  }
+}
 
 
 function addFeedLine(text) {
@@ -301,15 +299,6 @@ function addFeedLine(text) {
 }
 
 
-
-
-function updateTries() {
-  $('.triesRemaining .value').text(`${triesRemaining} / ${triesMax}`)
-}
-
-function updateThreats() {
-  $('.threatsRemaining .value').text(`${threatsRemaining} / ${correctPerLevel[currentLevel-1]}`)
-}
 
 
 
@@ -402,16 +391,14 @@ function gameOver(idle) {
 
 function gameOverScreen(idle) {
 
-  console.log('game over')
-
-  //Set analytics values
-  
+  console.log('game over')  
 
   //Show Thats a wrap display
   animateSwap('.gameDesc', '.gameOverDesc', animSpeed, 0)   
 
   //Show the game over modal
-  animIn('.gameOver-Modal', animSpeed)
+  //animIn('.gameOver-Modal', animSpeed)
+
 
 
   //If the game was idle, reset the game automatically after idleResetTimer time
@@ -421,8 +408,31 @@ function gameOverScreen(idle) {
         resetGame()
       }      
     }, idleResetTimer * 1000)
+  } else {
+
+    showGridWipe()
+
   }
 
+}
+function showGridWipe() {
+  animIn('.gridWipe-Modal', animSpeed)
+  setTimeout(function() {
+    animOut('.gridWipe-Modal', animSpeed)
+  }, gridWipeAnimationTime)
+
+  let remainingBlocks = $('.gameBlock.correct').not('.clicked').length
+  setTimeout(function() {    
+    for (let i = 0; i < remainingBlocks; i++) {
+      setTimeout(function() {
+        $('.gameBlock.correct').not('.clicked').first().addClass('clicked')
+      }, grideWipeDelay * i)
+    }
+  }, gridWipeAnimationTime + animSpeed)
+
+  setTimeout(function() {
+    animIn('.gameOver-Modal', animSpeed)
+  }, (gridWipeAnimationTime + animSpeed) + (grideWipeDelay * remainingBlocks) + animSpeed)
 }
 
 
@@ -580,7 +590,7 @@ function resetGame() {
   $('body').attr('data-final-level', false)
 
   //Reset the tries
-  triesRemaining = triesMax 
+  currentTurn = 1
 
   //Hide the game over modal
   animOut('.gameOver-Modal', 0)
@@ -609,36 +619,23 @@ function handleBlockClick(el) {
     playerScore = playerScore + 1
     updateScore()
 
-    triesRemaining--
-    updateTries()
-
+    currentTurn++
     threatsRemaining--
-    updateThreats()
 
-    if (threatsRemaining <= 0 || triesRemaining <= 0) {
-      if (currentLevel < maxLevels) {
-        currentLevel++
-        nextLevel()
-      } else {
-        gameOver()
-      }
+    if (threatsRemaining <= 0 || currentTurn >= maxTurns) {      
+        gameOver()      
     }
   } else if (!$(el).hasClass('clicked')) {
-    triesRemaining--
-    addFeedLine('Missed Threat at [' + $(el).attr('data-id') + ']. Tries remaining: ' + triesRemaining)
-    updateTries()
-
-    if (triesRemaining <= 0) {
-      if (currentLevel < maxLevels) {
-        currentLevel++
-        nextLevel()
-      } else {
+    currentTurn++
+    addFeedLine('Missed Threat at [' + $(el).attr('data-id') + ']. Tries remaining: ' + (maxTurns - currentTurn))
+    
+    if (currentTurn >= maxTurns) {
         gameOver()
-      }
-    }
+    }    
   }
 
   $(el).addClass('clicked')
+  updateAIActiveBar()
 
 }
 
